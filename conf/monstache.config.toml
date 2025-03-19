@@ -1,0 +1,30 @@
+mongo-url = "mongodb://mongodb-1:27017,mongodb-2:27018,mongodb-3:27019/test?replicaSet=rs0"
+elasticsearch-urls = ["http://elasticsearch:9200"]
+elasticsearch-max-conns = 4
+elasticsearch-max-seconds = 5
+elasticsearch-max-bytes = 8000000
+
+# 자동삭제 방지
+dropped-collections = false
+dropped-databases = false
+
+namespace-regex = "^test"
+direct-read-namespaces = ["test.checksheets","test.kh"]
+change-stream-namespaces = ["test.checksheets","test.kh"]
+
+#[logs]
+#info = "/Users/build/monstache/build/darwin-amd64/logs/info.log"
+#warn = "/Users/build/monstache/build/darwin-amd64/logs/warn.log"
+#error = "/Users/build/monstache/build/darwin-amd64/logs/error.log"
+#trace = "/Users/build/monstache/build/darwin-amd64/logs/trace.log"
+
+index-as-update = true
+index-oplog-time = true
+
+[[mapping]]
+namespace = "test.checksheets"
+index = "checksheets"
+
+[[mapping]]
+namespace = "test.kh"
+index = "kh"

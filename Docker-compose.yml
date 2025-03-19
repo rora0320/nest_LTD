@@ -1,4 +1,92 @@
-FROM ubuntu:latest
-LABEL authors="USER"
+version: '3.9'
 
-ENTRYPOINT ["top", "-b"]
+services:
+
+  # docker exec -it mongodb-1-test mongosh 로 접속 후 레플리카셋 초기화 & hosts 설정 추가하기
+  # rs.initiate({  _id: "rs0", members: [ { _id: 0, host:"mongodb-1-test:27017"}, { _id: 1, host:"mongodb-2-test:27018"}, { _id: 2, host:"mongodb-3-test:27019"}]})
+  mongodb-1:
+    image: mongo:latest
+    container_name: mongodb-1-test
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./docker-share-data/mongodb-1-data:/data/db
+      - ./conf/mongod.conf:/etc/mongod.conf
+    command: [ "mongod", "--replSet", "rs0", "--port" , "27017","--bind_ip_all"]
+    networks:
+      - kh-net
+
+  mongodb-2: #서비스 이름
+    image: mongo:latest
+    container_name: mongodb-2-test
+    ports:
+      - "27018:27018"
+    volumes:
+      - ./docker-share-data/mongodb-2-data:/data/db
+      - ./conf/mongod2.conf:/etc/mongod.conf
+    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all",  "--port" , "27018"]
+    networks:
+      - kh-net
+
+  mongodb-3:
+    image: mongo:latest
+    container_name: mongodb-3-test
+    ports:
+      - "27019:27019"
+    volumes:
+      - ./docker-share-data/mongodb-3-data:/data/db
+      - ./conf/mongod3.conf:/etc/mongod.conf
+    command: [ "mongod", "--replSet", "rs0", "--bind_ip_all", "--port" , "27019",]
+    networks:
+      - kh-net
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    container_name: elasticsearch-test
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms1024m -Xmx1024m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./docker-share-data/es-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - kh-net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.6.0
+    container_name: kibana_lecture-test
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - kh-net
+    depends_on:
+      - elasticsearch
+
+  monstache:
+    image: rwynn/monstache:rel6 # 호환버전 확인 필수
+    command: -f /home/monstache.config.toml &
+    volumes:
+      - ./conf/monstache.config.toml:/home/monstache.config.toml
+    depends_on: #서비스이름작성
+      - elasticsearch
+      - mongodb-1
+      - mongodb-2
+      - mongodb-3
+    ports:
+      - "8080:8080"
+    networks:
+      - kh-net
+
+networks:
+  kh-net:
+    driver: bridge
+#      external: true
