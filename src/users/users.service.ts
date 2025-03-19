@@ -14,11 +14,11 @@ export class UsersService {
     return 'This action adds a new user';
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll() {
+    return this.usersRepository.find();
   }
 
   async findOne(id: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id: id } });
+    return this.usersRepository.findOneOrFail({ where: { id: id } });
   }
 }

@@ -5,11 +5,13 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
+  Delete, UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import {AuthGuard} from "../auth/auth.guard";
+
 
 @Controller('users')
 export class UsersController {
@@ -21,9 +23,10 @@ export class UsersController {
   }
 
   @Get()
-  findAll() {
-    console.log('여기 유저');
-    return this.usersService.findAll();
+  @UseGuards(AuthGuard)
+  async findAll() {
+    console.log('여기 유저?????');
+    return await this.usersService.findAll();
   }
 
   @Get(':id')
