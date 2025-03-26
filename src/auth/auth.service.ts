@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { jwtConstants, JwtPayload } from './constants';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -14,17 +16,25 @@ export class AuthService {
   ) {}
 
   //passport-jwt전략 아이디 비밀번호 받으면 토큰
-  async validateUser(id: string, pass: string): Promise<any> {
+  async validateUser(
+    id: string,
+    pass: string,
+  ): Promise<Omit<User, 'password'> | null> {
     const user = await this.usersService.findOne(id);
+
     if (user && user.password === pass) {
-      const { password, ...result } = user;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _password, ...result } = user;
       return result;
     }
     return null;
   }
 
   //로그인으로 토큰 발급
-  async signIn(id: string, pass: string): Promise<{ access_token: string }> {
+  async signIn(
+    id: string,
+    pass: string,
+  ): Promise<{ access_token: string; refresh_token: string }> {
     const user = await this.usersService.findOne(id);
 
     //!!TODO bycrpt
@@ -36,7 +46,45 @@ export class AuthService {
     }
     const payload = { id: user.id, username: user.userName };
 
-    return { access_token: await this.jwtService.signAsync(payload) };
+    const access_token = await this.jwtService.signAsync(payload, {
+      expiresIn: '30s',
+    });
+    const refresh_token = await this.jwtService.signAsync(payload, {
+      expiresIn: '2m',
+    });
+    return { access_token, refresh_token };
   }
 
+  async refreshAccessToken(
+    token: string,
+  ): Promise<{ access_token: string; refresh_token: string }> {
+    try {
+      // 리프레시 토큰 검증
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+        secret: jwtConstants.secret,
+      });
+
+      const access_token = await this.jwtService.signAsync(
+        { id: payload.id, username: payload.username },
+        {
+          expiresIn: '30s',
+        },
+      );
+      const refresh_token = await this.jwtService.signAsync(
+        { id: payload.id, username: payload.username },
+        {
+          expiresIn: '60s',
+        },
+      );
+      return { access_token, refresh_token };
+    } catch (error: unknown) {
+      // error가 Error 인스턴스인지 확인
+      if (error instanceof Error) {
+        console.log('토큰에러?', error.message);
+      } else {
+        console.log('알 수 없는 오류 발생');
+      }
+      throw new UnauthorizedException('리프레시 토큰이 유효하지 않습니다.');
+    }
+  }
 }

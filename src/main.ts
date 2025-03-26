@@ -7,7 +7,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix(SERVER_PREFIX);
   app.enableCors({
-    origin: (origin, callback) => {
+    origin: (
+      origin: string,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       // allow requests with no origin like mobile apps or curl requests
       if (!origin) return callback(null, true);
       if (!ALLOW_ORIGIN_LIST.includes(origin)) {

@@ -22,6 +22,6 @@ export function TypeormConfig(configService: ConfigService) {
   };
 }
 
-export const ALLOW_ORIGIN_LIST = ['localhost:5000'];
+export const ALLOW_ORIGIN_LIST: string[] = ['http://localhost:5173'];
 
-export const SERVER_PREFIX = 'api';
+export const SERVER_PREFIX: string = 'api';
