@@ -34,7 +34,11 @@ export class AuthService {
   async signIn(
     id: string,
     pass: string,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  ): Promise<{
+    access_token: string;
+    refresh_token: string;
+    loginUserDto: Omit<User, 'password'>;
+  }> {
     const user = await this.usersService.findOne(id);
 
     //!!TODO bycrpt
@@ -46,13 +50,16 @@ export class AuthService {
     }
     const payload = { id: user.id, username: user.userName };
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...loginUserDto } = user;
+
     const access_token = await this.jwtService.signAsync(payload, {
-      expiresIn: '30s',
+      expiresIn: process.env.EXPIRE_ACCESS_TOKEN,
     });
     const refresh_token = await this.jwtService.signAsync(payload, {
-      expiresIn: '2m',
+      expiresIn: process.env.EXPIRE_REFRESH_TOKEN,
     });
-    return { access_token, refresh_token };
+    return { access_token, refresh_token, loginUserDto };
   }
 
   async refreshAccessToken(
@@ -67,13 +74,13 @@ export class AuthService {
       const access_token = await this.jwtService.signAsync(
         { id: payload.id, username: payload.username },
         {
-          expiresIn: '30s',
+          expiresIn: process.env.EXPIRE_ACCESS_TOKEN,
         },
       );
       const refresh_token = await this.jwtService.signAsync(
         { id: payload.id, username: payload.username },
         {
-          expiresIn: '60s',
+          expiresIn: process.env.EXPIRE_REFRESH_TOKEN,
         },
       );
       return { access_token, refresh_token };
