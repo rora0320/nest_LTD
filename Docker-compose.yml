@@ -86,6 +86,27 @@ services:
     networks:
       - kh-net
 
+  mongo-init:
+    image: mongodb-1
+    container_name: mongo-init
+    depends_on:
+      - mongodb
+    restart: "no"
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        echo "Waiting for MongoDB to start..."
+        sleep 5
+        mongo --host mongodb-1-test:27017 --eval '
+          rs.initiate({  _id: "rs0", members: [ 
+        { _id: 0, host:"mongodb-1-test:27017"}, 
+        { _id: 1, host:"mongodb-2-test:27018"}, 
+        { _id: 2, host:"mongodb-3-test:27019"}
+        ]})
+        '
+    networks:
+      - kh-net
+
 networks:
   kh-net:
     driver: bridge
