@@ -2,6 +2,25 @@ version: '3.9'
 
 services:
 
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: LMS
+      TZ: Asia/Seoul
+      PGTZ: Asia/Seoul
+      LANG: ko_KR.UTF-8
+      LC_ALL: ko_KR.UTF-8
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker-share-data/postgres_data:/var/lib/postgresql/data
+    networks:
+      - kh-net
+
   # docker exec -it mongodb-1-test mongosh 로 접속 후 레플리카셋 초기화 & hosts 설정 추가하기
   # rs.initiate({  _id: "rs0", members: [ { _id: 0, host:"mongodb-1-test:27017"}, { _id: 1, host:"mongodb-2-test:27018"}, { _id: 2, host:"mongodb-3-test:27019"}]})
   mongodb-1:
@@ -90,7 +109,7 @@ services:
     image: mongodb-1
     container_name: mongo-init
     depends_on:
-      - mongodb
+      - mongodb-1
     restart: "no"
     entrypoint: [ "/bin/sh", "-c" ]
     command:

@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
+import { GroupEntity } from '../users/entities/group.entity';
 
 export function TypeormConfig(configService: ConfigService) {
   const env = configService.get<string>('ENV');
@@ -10,13 +11,13 @@ export function TypeormConfig(configService: ConfigService) {
   }
 
   return <TypeOrmModuleOptions>{
-    type: configService.get(`DB_TYPE`),
-    port: Number(process.env.DB_PORT),
-    host: process.env.DB_HOST,
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE,
-    entities: [User],
+    type: configService.get(`POSTGRES_TYPE`),
+    port: Number(process.env.POSTGRES_PORT),
+    host: process.env.POSTGRES_HOST,
+    username: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD,
+    database: process.env.POSTGRES_DB,
+    entities: [User, GroupEntity],
     synchronize: !(process.env.DB_SYNCHRONIZE === 'false'), //설정 안하면 기본 true,
     logging: !(process.env.LOGGING === 'false'),
   };

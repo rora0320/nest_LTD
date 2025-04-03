@@ -5,4 +5,5 @@ export const jwtConstants = {
 export interface JwtPayload {
   id: string;
   username: string;
+  role: 'admin' | 'user';
 }
