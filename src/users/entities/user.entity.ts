@@ -1,11 +1,14 @@
 import {
+  BeforeInsert,
   Column,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { GroupEntity } from './group.entity';
+import { SaltRounds } from '../../auth/constants';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -38,4 +41,9 @@ export class User {
 
   @Column()
   isActive: boolean;
+
+  @BeforeInsert()
+  private async beforeInsert() {
+    this.password = await bcrypt.hash(this.password, SaltRounds);
+  }
 }

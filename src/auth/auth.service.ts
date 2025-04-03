@@ -7,6 +7,7 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { jwtConstants, JwtPayload } from './constants';
 import { User } from '../users/entities/user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -16,13 +17,10 @@ export class AuthService {
   ) {}
 
   //passport-jwt전략 아이디 비밀번호 받으면 토큰
-  async validateUser(
-    id: string,
-    pass: string,
-  ): Promise<Omit<User, 'password'> | null> {
+  async validateUser(id: string): Promise<Omit<User, 'password'> | null> {
     const user = await this.usersService.findOne(id);
 
-    if (user && user.password === pass) {
+    if (user) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _password, ...result } = user;
       return result;
@@ -45,7 +43,10 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException(`존재하지 않는 아이디입니다.`);
     }
-    if (user?.password !== pass) {
+
+    const isComparePassword: boolean = bcrypt.compareSync(pass, user.password);
+
+    if (!isComparePassword) {
       throw new UnauthorizedException();
     }
     const payload = { id: user.id, username: user.userName };

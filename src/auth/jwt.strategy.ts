@@ -3,6 +3,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { User } from '../users/entities/user.entity';
+import { JwtPayload } from './constants';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -16,12 +17,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   //로그인 처리
-  async validate(
-    id: string,
-    password: string,
-  ): Promise<Omit<User, 'password'> | null> {
-    console.log('로그인 validate User ');
-    const user = await this.authService.validateUser(id, password);
+  async validate(payload: JwtPayload): Promise<Omit<User, 'password'> | null> {
+    const user = await this.authService.validateUser(payload.id);
+
     if (!user) {
       throw new UnauthorizedException();
     }

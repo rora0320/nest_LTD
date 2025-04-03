@@ -7,3 +7,5 @@ export interface JwtPayload {
   username: string;
   role: 'admin' | 'user';
 }
+
+export const SaltRounds = 10;
